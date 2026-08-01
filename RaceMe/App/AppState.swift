@@ -76,10 +76,13 @@ final class AppState {
     func start() {
         Haptics.shared.prepare()
         DemoMode.seed(profile)
+        DemoMode.log("start: screen=\(DemoMode.screen?.rawValue ?? "nil") seeds=\(DemoMode.seedsProfile) onboarded=\(profile.completedOnboarding)")
         liveRaces.start()
         Task {
             await DemoMode.seedHistory(into: services.history, profile: profile)
+            DemoMode.log("refresh: begin")
             await refresh()
+            DemoMode.log("refresh: done staged=\(stagedRace != nil) results=\(recentResults.count) league=\(league != nil)")
             applyDemoScreen()
         }
     }
@@ -87,6 +90,7 @@ final class AppState {
     /// Opens whatever `-demoScreen` asked for, once there's data behind it.
     private func applyDemoScreen() {
         guard let screen = DemoMode.screen else { return }
+        DemoMode.log("applyDemoScreen: \(screen.rawValue)")
         switch screen {
         case .home: tab = .home
         case .board: tab = .board
@@ -99,6 +103,7 @@ final class AppState {
             // step rather than starting it from the top.
             break
         }
+        DemoMode.log("applyDemoScreen: done tab=\(tab.rawValue) race=\(activeRace != nil) post=\(postRace != nil) spectate=\(spectating != nil)")
     }
 
     func saveProfile() {

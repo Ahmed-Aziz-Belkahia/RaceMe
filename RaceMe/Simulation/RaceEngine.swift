@@ -435,8 +435,17 @@ final class RaceEngine {
             distances: states.mapValues(\.distance)
         ))
         // Keep a rolling window until the race ends; then it's the record.
-        while let first = finishSamples.first, elapsed - first.t > finishSampleWindow {
-            finishSamples.removeFirst()
+        //
+        // Trimmed in batches, not one at a time. `removeFirst()` on an Array is
+        // O(n) — at 60Hz with a 540-sample window that was shuffling half a
+        // million elements a second, every second of every race, each carrying a
+        // dictionary's worth of ARC traffic. Dropping a chunk at a time makes it
+        // amortised O(1) for the same memory ceiling.
+        if let first = finishSamples.first, elapsed - first.t > finishSampleWindow * 1.5 {
+            let cutoff = elapsed - finishSampleWindow
+            if let keepFrom = finishSamples.firstIndex(where: { $0.t >= cutoff }), keepFrom > 0 {
+                finishSamples.removeFirst(keepFrom)
+            }
         }
     }
 

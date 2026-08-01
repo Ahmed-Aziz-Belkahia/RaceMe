@@ -99,9 +99,18 @@ enum DemoMode {
     /// against actual `GhostRunner` physics, so the seeded history has genuine
     /// splits and genuine photo finishes — which is the only way to see whether
     /// the slit-scan renderer is any good.
+    /// Emits a line only when a demo launch is driving the app. Read back off
+    /// the simulator console by `Scripts/screenshots.sh`, which is the only way
+    /// to see what a headless CI build is actually doing.
+    static func log(_ message: String) {
+        guard isActive else { return }
+        print("[RACEME-DEMO] \(message)")
+    }
+
     @MainActor
     static func seedHistory(into history: RaceHistoryService, profile: RunnerProfile) async {
         guard seedsProfile else { return }
+        log("seedHistory: begin")
 
         let distances: [Double] = [5000, 5000, 3000, 5000, 1609.344, 10_000]
         for (i, distance) in distances.enumerated() {
@@ -133,11 +142,18 @@ enum DemoMode {
             engine.start()
 
             // 60Hz fixed step so the finish sampling matches a real race exactly.
+            //
+            // This runs on the main actor and a 10K is well over a hundred
+            // thousand iterations, so it yields periodically. Without that it
+            // pins the main thread and the app renders nothing at all until
+            // every race has finished — which is exactly what it did.
             var guardCounter = 0
             while !engine.isFinished, guardCounter < 400_000 {
                 engine.tick(dt: 1.0 / 60.0)
                 guardCounter += 1
+                if guardCounter % 2_000 == 0 { await Task.yield() }
             }
+            log("seeded race \(i + 1)/\(distances.count) — \(Fmt.raceName(distance)) in \(guardCounter) steps")
 
             var result = engine.makeResult(
                 baselinePace: profile.handicapPaceSecPerKm,

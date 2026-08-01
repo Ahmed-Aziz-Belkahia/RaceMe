@@ -47,12 +47,20 @@ xcrun simctl status_bar "$UDID" override --time "5:31" --batteryState charged --
 
 mkdir -p "$OUT"
 
+mkdir -p "$OUT/logs"
+
 for SCREEN in "${SCREENS[@]}"; do
   echo "==> $SCREEN"
   xcrun simctl uninstall "$UDID" "$BUNDLE_ID" 2>/dev/null || true
   xcrun simctl install "$UDID" "$APP"
-  xcrun simctl launch "$UDID" "$BUNDLE_ID" \
-    -demoScreen "$SCREEN" -demoFreeze YES >/dev/null
+
+  # --console-pty streams the app's stdout/stderr, which is the only window into
+  # a headless run: DemoMode.log lines, SwiftUI runtime complaints, and the
+  # message from any fatalError all come out here. It blocks for the life of the
+  # process, so it runs in the background and gets killed after the capture.
+  xcrun simctl launch --console-pty "$UDID" "$BUNDLE_ID" \
+    -demoScreen "$SCREEN" -demoFreeze YES > "$OUT/logs/$SCREEN.log" 2>&1 &
+  CONSOLE_PID=$!
 
   # Let the screen settle.
   #
@@ -76,7 +84,16 @@ for SCREEN in "${SCREENS[@]}"; do
 
   xcrun simctl io "$UDID" screenshot --type png "$OUT/$SCREEN.png"
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+  kill "$CONSOLE_PID" 2>/dev/null || true
+  wait "$CONSOLE_PID" 2>/dev/null || true
+
+  echo "    $(grep -c 'RACEME-DEMO' "$OUT/logs/$SCREEN.log" 2>/dev/null || echo 0) demo log lines"
 done
 
+# Anything that crashed lands here. Empty is the good outcome.
+mkdir -p "$OUT/crashes"
+find ~/Library/Logs/DiagnosticReports -name '*RaceMe*' -mmin -60 \
+  -exec cp {} "$OUT/crashes/" \; 2>/dev/null || true
+
 rm -rf "$DERIVED"
-echo "==> Done. $(ls -1 "$OUT" | wc -l | tr -d ' ') screenshots in $OUT/"
+echo "==> Done. $(ls -1 "$OUT"/*.png 2>/dev/null | wc -l | tr -d ' ') screenshots, $(ls -1 "$OUT"/crashes 2>/dev/null | wc -l | tr -d ' ') crash reports."
