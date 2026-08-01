@@ -93,6 +93,9 @@ final class AppState {
             await DemoMode.seedHistory(into: services.history, profile: profile)
             await refresh()
             DemoMode.log("seed refresh: results=\(recentResults.count)")
+            // Re-apply: screens built on history had nothing to open the first
+            // time round. `-demoScreen postRace` was quietly landing on Home.
+            applyDemoScreen()
         }
     }
 
@@ -105,8 +108,10 @@ final class AppState {
         case .board: tab = .board
         case .profile: tab = .you
         case .race: startStagedRace()
-        case .postRace: postRace = recentResults.first
-        case .spectate: spectating = liveRaces.races.first
+        // Idempotent — this runs once immediately and again once history has
+        // been seeded, so it must not reopen or replace what's already up.
+        case .postRace: postRace = postRace ?? recentResults.first
+        case .spectate: spectating = spectating ?? liveRaces.races.first
         case .coldOpen, .hook, .pace, .compute, .card, .paywall:
             // Handled by RootView, which drops straight into the flow at that
             // step rather than starting it from the top.

@@ -75,7 +75,11 @@ struct LiveRaceView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
 
-                Spacer(minLength: 88)
+                // Small minimum, so leftover height is shared with the spacers
+                // above rather than all pooling into one dead slab under the
+                // ticker. The control bar already has its own reserved space
+                // via safeAreaInset.
+                Spacer(minLength: 24)
             }
 
             ReactionBurst(reactions: model.liveReactions)

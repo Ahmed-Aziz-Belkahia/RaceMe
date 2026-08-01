@@ -303,19 +303,28 @@ struct LaneView: View {
     }
 
     /// Soft edges so racers leave and enter the frame rather than being clipped.
+    ///
+    /// Erases with `.destinationOut` rather than painting the base colour on
+    /// top. Overpainting an opaque colour onto a translucent lane that sits on a
+    /// translucent ambient field doesn't blend away — it stacks, and it left two
+    /// dark maroon slabs down the sides of the hero. Erasing takes the lane to
+    /// genuinely transparent and lets the background through untouched.
     private func drawEdgeFade(_ ctx: inout GraphicsContext, size: CGSize) {
         let w: CGFloat = 34
-        ctx.fill(
+        var eraser = ctx
+        eraser.blendMode = .destinationOut
+
+        eraser.fill(
             Path(CGRect(x: 0, y: 0, width: w, height: size.height)),
             with: .linearGradient(
-                Gradient(colors: [Track.base, Track.base.opacity(0)]),
+                Gradient(colors: [.white, .white.opacity(0)]),
                 startPoint: .zero, endPoint: CGPoint(x: w, y: 0)
             )
         )
-        ctx.fill(
+        eraser.fill(
             Path(CGRect(x: size.width - w, y: 0, width: w, height: size.height)),
             with: .linearGradient(
-                Gradient(colors: [Track.base.opacity(0), Track.base]),
+                Gradient(colors: [.white.opacity(0), .white]),
                 startPoint: CGPoint(x: size.width - w, y: 0), endPoint: CGPoint(x: size.width, y: 0)
             )
         )
