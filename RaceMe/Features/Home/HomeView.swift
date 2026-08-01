@@ -42,7 +42,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 4) {
             TrackLabel(dayLabel)
             Text(line)
-                .font(Body.title(28))
+                .font(Prose.title(28))
                 .foregroundStyle(Track.chalk)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -91,7 +91,7 @@ struct HomeView: View {
                             }
                         }
                         Text(opponentTitle(staged))
-                            .font(Body.title(26))
+                            .font(Prose.title(26))
                             .foregroundStyle(Track.chalk)
                             .lineLimit(2)
                     }
@@ -104,7 +104,7 @@ struct HomeView: View {
                 .padding(.top, 18)
 
                 Text(staged.rationale)
-                    .font(Body.copy(16))
+                    .font(Prose.copy(16))
                     .foregroundStyle(Track.chalkDim)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 18)
@@ -122,7 +122,7 @@ struct HomeView: View {
                         .fill(staged.projectedOutcome.accent)
                         .frame(width: 6, height: 6)
                     Text(staged.projectedOutcome.headline)
-                        .font(Body.caption(15))
+                        .font(Prose.caption(15))
                         .foregroundStyle(Track.chalkDim)
                 }
                 .padding(.horizontal, 18)
@@ -233,7 +233,7 @@ struct HomeView: View {
                 .padding(.horizontal, 20)
 
                 Text(league.urgencyLine())
-                    .font(Body.caption(15))
+                    .font(Prose.caption(15))
                     .foregroundStyle(Track.chalkDim)
                     .padding(.horizontal, 20)
                     .padding(.top, 4)
@@ -301,7 +301,7 @@ private struct LiveRaceCard: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 7) {
                     Text(race.config.user.displayName)
-                        .font(Body.caption(15))
+                        .font(Prose.caption(15))
                         .foregroundStyle(Track.chalk)
                         .lineLimit(1)
                     Text("·")
@@ -406,7 +406,7 @@ private struct RecentFinishRow: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
-                        .font(Body.copy(16))
+                        .font(Prose.copy(16))
                         .foregroundStyle(Track.chalk)
                         .lineLimit(1)
                     Text("\(Fmt.raceName(result.config.distanceMeters)) · \(Fmt.clock(result.userTime))")

@@ -44,12 +44,12 @@ struct TasteRaceScreen: View {
             Spacer()
             VStack(alignment: .leading, spacing: 10) {
                 Text("Alright. One race.")
-                    .font(Body.title(34))
+                    .font(Prose.title(34))
                     .foregroundStyle(Track.chalk)
                 Text(model.profile.rivalMention.map {
                     "400 metres against \($0)'s pace. This is exactly what a real one looks like."
                 } ?? "400 metres against a pacer. This is exactly what a real one looks like.")
-                    .font(Body.copy(18))
+                    .font(Prose.copy(18))
                     .foregroundStyle(Track.chalkDim)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -99,7 +99,7 @@ private struct TasteFinishView: View {
                         .bibTracking(96)
                         .foregroundStyle(result.userWon ? Track.you : Track.chalk)
                     Text(subhead)
-                        .font(Body.copy(18))
+                        .font(Prose.copy(18))
                         .foregroundStyle(Track.chalkDim)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -117,7 +117,7 @@ private struct TasteFinishView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .padding(.horizontal, 20)
                     Text("Every race you finish makes one of these.")
-                        .font(Body.caption(15))
+                        .font(Prose.caption(15))
                         .foregroundStyle(Track.chalkFaint)
                         .padding(.horizontal, 24)
                 }

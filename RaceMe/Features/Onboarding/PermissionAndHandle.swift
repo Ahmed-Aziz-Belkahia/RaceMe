@@ -112,7 +112,7 @@ private struct PrimingLayout: View {
             Spacer(minLength: 20)
 
             Text(title)
-                .font(Body.title(32))
+                .font(Prose.title(32))
                 .foregroundStyle(Track.chalk)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 24)
@@ -128,11 +128,11 @@ private struct PrimingLayout: View {
                             .frame(width: 24, height: 24)
                         VStack(alignment: .leading, spacing: 3) {
                             Text(item.1)
-                                .font(Body.copy(18))
+                                .font(Prose.copy(18))
                                 .foregroundStyle(Track.chalk)
                                 .fixedSize(horizontal: false, vertical: true)
                             Text(item.2)
-                                .font(Body.caption(15))
+                                .font(Prose.caption(15))
                                 .foregroundStyle(Track.chalkFaint)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -146,7 +146,7 @@ private struct PrimingLayout: View {
             Spacer(minLength: 22)
 
             Text(promise)
-                .font(Body.caption(15))
+                .font(Prose.caption(15))
                 .foregroundStyle(Track.chalkFaint)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 24)
@@ -166,7 +166,10 @@ private struct PrimingLayout: View {
 
 /// Thin wrapper so the priming screen can fire the location prompt and get a
 /// callback, without a whole location stack living in a view.
-final class LocationPrimer: NSObject, CLLocationManagerDelegate {
+/// `@unchecked Sendable` because `CLLocationManager` delivers its callbacks on
+/// the queue the manager was created on — the main queue here — so `completion`
+/// is only ever touched from one thread. The compiler can't see that guarantee.
+final class LocationPrimer: NSObject, CLLocationManagerDelegate, @unchecked Sendable {
     static let shared = LocationPrimer()
     private let manager = CLLocationManager()
     private var completion: ((Bool) -> Void)?
@@ -226,10 +229,10 @@ struct HandleScreen: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("What do we call you?")
-                    .font(Body.title(32))
+                    .font(Prose.title(32))
                     .foregroundStyle(Track.chalk)
                 Text("This is the name on the board.")
-                    .font(Body.copy(17))
+                    .font(Prose.copy(17))
                     .foregroundStyle(Track.chalkDim)
             }
             .padding(.horizontal, 24)

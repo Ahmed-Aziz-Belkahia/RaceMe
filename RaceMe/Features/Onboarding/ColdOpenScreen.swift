@@ -51,7 +51,7 @@ struct ColdOpenScreen: View {
                     .padding(.bottom, 18)
 
                 Text("Someone out there is running right now.")
-                    .font(Body.copy(19))
+                    .font(Prose.copy(19))
                     .foregroundStyle(Track.chalkDim)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)

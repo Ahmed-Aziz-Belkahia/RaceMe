@@ -82,12 +82,12 @@ struct QuestionScreen<Options: View>: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text(title)
-                    .font(Body.title(34))
+                    .font(Prose.title(34))
                     .foregroundStyle(Track.chalk)
                     .fixedSize(horizontal: false, vertical: true)
                 if let subtitle {
                     Text(subtitle)
-                        .font(Body.copy(17))
+                        .font(Prose.copy(17))
                         .foregroundStyle(Track.chalkDim)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -101,7 +101,7 @@ struct QuestionScreen<Options: View>: View {
 
             if let footnote {
                 Text(footnote)
-                    .font(Body.caption(15))
+                    .font(Prose.caption(15))
                     .foregroundStyle(Track.chalkFaint)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 24)
@@ -143,13 +143,13 @@ struct OptionRow: View {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(label)
-                        .font(Body.copy(19))
+                        .font(Prose.copy(19))
                         .foregroundStyle(Track.chalk)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     if let detail {
                         Text(detail)
-                            .font(Body.caption(15))
+                            .font(Prose.caption(15))
                             .foregroundStyle(Track.chalkFaint)
                     }
                 }

@@ -54,7 +54,7 @@ struct PaywallScreen: View {
                 .foregroundStyle(Track.chalk)
 
             Text(pitch)
-                .font(Body.copy(18))
+                .font(Prose.copy(18))
                 .foregroundStyle(Track.chalkDim)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -116,13 +116,13 @@ struct PaywallScreen: View {
         VStack(alignment: .leading, spacing: 10) {
             if let errorMessage {
                 Text(errorMessage)
-                    .font(Body.caption(15))
+                    .font(Prose.caption(15))
                     .foregroundStyle(Track.signal)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Text(termsLine)
-                .font(Body.caption(14))
+                .font(Prose.caption(14))
                 .foregroundStyle(Track.chalkFaint)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -131,7 +131,7 @@ struct PaywallScreen: View {
                 Button("Terms") {}
                 Button("Privacy") {}
             }
-            .font(Body.caption(14))
+            .font(Prose.caption(14))
             .foregroundStyle(Track.chalkFaint)
             .buttonStyle(.pressable(scale: 0.98, haptic: nil))
         }
@@ -245,7 +245,7 @@ private struct PlanRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
                         Text(plan.title)
-                            .font(Body.headline(18))
+                            .font(Prose.headline(18))
                             .foregroundStyle(Track.chalk)
                         if let trial = plan.trialDays {
                             // The only signal-yellow element on this screen.
@@ -260,7 +260,7 @@ private struct PlanRow: View {
                     }
                     if let note = plan.perMonthNote {
                         Text(note)
-                            .font(Body.caption(14))
+                            .font(Prose.caption(14))
                             .foregroundStyle(Track.chalkFaint)
                     }
                 }

@@ -18,13 +18,19 @@ import SwiftUI
 /// A single app-wide namespace for glass identity, so a nav action can *become*
 /// the race-start button rather than cross-fading into it. That transformation
 /// is the entire reason this capability exists.
+/// Optional on purpose.
+///
+/// There is no way to conjure a `Namespace.ID` outside a `@Namespace` property,
+/// and a `static var` holding one is exactly the nonisolated global mutable
+/// state Swift 6 rejects. So the default is `nil`, the real namespace is
+/// injected once at the root, and every consumer goes through `OptionalGlassID`
+/// which simply skips the morph identity if there's nothing to morph within.
 struct GlassNamespaceKey: EnvironmentKey {
-    @Namespace static var fallback
-    static let defaultValue: Namespace.ID = fallback
+    static let defaultValue: Namespace.ID? = nil
 }
 
 extension EnvironmentValues {
-    var glassNamespace: Namespace.ID {
+    var glassNamespace: Namespace.ID? {
         get { self[GlassNamespaceKey.self] }
         set { self[GlassNamespaceKey.self] = newValue }
     }
@@ -64,11 +70,14 @@ struct GlassPill<Content: View>: View {
     }
 }
 
-private struct OptionalGlassID: ViewModifier {
+/// Applies a glass morph identity only when there is both an id and a namespace
+/// to hang it in.
+struct OptionalGlassID: ViewModifier {
     let id: String?
-    let namespace: Namespace.ID
+    let namespace: Namespace.ID?
+
     func body(content: Content) -> some View {
-        if let id {
+        if let id, let namespace {
             content.glassEffectID(id, in: namespace)
         } else {
             content
@@ -132,7 +141,7 @@ struct QuietAction: View {
             action()
         } label: {
             Text(title)
-                .font(Body.copy(17))
+                .font(Prose.copy(17))
                 .foregroundStyle(color)
                 .padding(.vertical, 14)
                 .padding(.horizontal, 20)

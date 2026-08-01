@@ -125,7 +125,7 @@ struct SpectateView: View {
             Text(sendCount == 0
                  ? "Tap the flame. They'll feel it."
                  : "Sent \(sendCount) \(sendCount == 1 ? "time" : "times").")
-                .font(Body.caption(15))
+                .font(Prose.caption(15))
                 .foregroundStyle(Track.chalkFaint)
 
             GlassControlBar(spacing: 12) {

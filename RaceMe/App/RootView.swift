@@ -156,7 +156,7 @@ struct RaceTabBar: View {
             }
             .padding(5)
             .glassEffect(.regular, in: .capsule)
-            .glassEffectID(GlassID.tabBar, in: glassNS)
+            .modifier(OptionalGlassID(id: GlassID.tabBar, namespace: glassNS))
         }
     }
 }
@@ -178,13 +178,13 @@ struct ChallengeSheet: View {
 
                 TrackLabel("Challenge")
                 Text(challenge.headline)
-                    .font(Body.title(30))
+                    .font(Prose.title(30))
                     .foregroundStyle(Track.chalk)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 8)
 
                 Text(challenge.subhead)
-                    .font(Body.copy(17))
+                    .font(Prose.copy(17))
                     .foregroundStyle(Track.chalkDim)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 10)

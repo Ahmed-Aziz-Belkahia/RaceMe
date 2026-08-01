@@ -33,13 +33,13 @@ struct ProofScreen: View {
                 .padding(.horizontal, 24)
 
                 Text("more distance a week.")
-                    .font(Body.title(30))
+                    .font(Prose.title(30))
                     .foregroundStyle(Track.chalk)
                     .padding(.horizontal, 24)
             }
 
             Text("That's the gap between runners who race someone every week and runners who log it alone.")
-                .font(Body.copy(18))
+                .font(Prose.copy(18))
                 .foregroundStyle(Track.chalkDim)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 24)
@@ -249,7 +249,7 @@ private struct ComputeStepRow: View {
                 }
             }
             Text(text)
-                .font(Body.copy(17))
+                .font(Prose.copy(17))
                 .foregroundStyle(state == .waiting ? Track.chalkFaint : Track.chalk)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)

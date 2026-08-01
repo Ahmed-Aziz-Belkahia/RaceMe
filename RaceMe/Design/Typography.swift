@@ -6,7 +6,9 @@ import SwiftUI
 /// the voice of the app: gaps, splits, distances, positions, times. Fat numerals
 /// safety-pinned to a vest.
 ///
-/// **Body** — quiet, gets out of the way, never competes with a number.
+/// **Prose** — quiet, gets out of the way, never competes with a number. Named
+/// `Prose` rather than `Body` because inside any `View`, `Body` resolves to the
+/// view's own `Body` associated type and shadows the scale entirely.
 ///
 /// Nothing under 17pt appears on a screen used while running. Nothing is thin.
 enum Bib {
@@ -43,7 +45,7 @@ enum Bib {
     }
 }
 
-enum Body {
+enum Prose {
     /// Screen titles. One question per screen wears this.
     static func title(_ size: CGFloat = 32) -> Font {
         .system(size: size, weight: .bold)

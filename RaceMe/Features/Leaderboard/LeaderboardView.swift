@@ -79,7 +79,7 @@ struct LeaderboardView: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             Text("Board")
-                .font(Body.title(32))
+                .font(Prose.title(32))
                 .foregroundStyle(Track.chalk)
             Spacer()
         }
@@ -261,12 +261,12 @@ struct LeaderboardRow: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(entry.isUser ? "You" : entry.racer.displayName)
-                    .font(Body.copy(compact ? 15 : 17))
+                    .font(Prose.copy(compact ? 15 : 17))
                     .foregroundStyle(entry.isUser ? Track.chalk : Track.chalkDim)
                     .lineLimit(1)
                 if !compact {
                     Text("\(entry.racesThisWeek) \(entry.racesThisWeek == 1 ? "race" : "races")")
-                        .font(Body.caption(13))
+                        .font(Prose.caption(13))
                         .foregroundStyle(Track.chalkFaint)
                 }
             }
@@ -351,11 +351,11 @@ private struct LeagueBanner: View {
                         .foregroundStyle(Track.chalkFaint)
                 }
                 Text(league.urgencyLine())
-                    .font(Body.copy(16))
+                    .font(Prose.copy(16))
                     .foregroundStyle(Track.chalk)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Top \(League.promotionCount) go up. Bottom \(League.relegationCount) go down. Resets Monday.")
-                    .font(Body.caption(14))
+                    .font(Prose.caption(14))
                     .foregroundStyle(Track.chalkFaint)
             }
             Spacer(minLength: 0)

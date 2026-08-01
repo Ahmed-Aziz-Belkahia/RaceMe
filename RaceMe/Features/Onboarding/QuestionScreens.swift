@@ -172,10 +172,10 @@ struct RivalScreen: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("Who?")
-                    .font(Body.title(40))
+                    .font(Prose.title(40))
                     .foregroundStyle(Track.chalk)
                 Text("First name is enough.")
-                    .font(Body.copy(17))
+                    .font(Prose.copy(17))
                     .foregroundStyle(Track.chalkDim)
             }
             .padding(.horizontal, 24)
@@ -201,7 +201,7 @@ struct RivalScreen: View {
                 .animation(motion.animation(Spring.ui), value: trimmed.isEmpty)
 
             Text("We won't tell them.")
-                .font(Body.caption(15))
+                .font(Prose.caption(15))
                 .foregroundStyle(Track.chalkFaint)
                 .padding(.horizontal, 24)
                 .padding(.top, 14)

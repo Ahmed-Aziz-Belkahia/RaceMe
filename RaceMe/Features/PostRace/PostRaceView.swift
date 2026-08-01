@@ -72,7 +72,7 @@ struct PostRaceView: View {
                 .minimumScaleFactor(0.6)
 
             Text(subheadText)
-                .font(Body.copy(19))
+                .font(Prose.copy(19))
                 .foregroundStyle(Track.chalkDim)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -114,7 +114,7 @@ struct PostRaceView: View {
                 Text(margin < 0.5
                      ? "Decided by \(String(format: "%.2f", margin))s at the line."
                      : "\(String(format: "%.2f", margin))s between first and second.")
-                    .font(Body.caption(15))
+                    .font(Prose.caption(15))
                     .foregroundStyle(Track.chalkFaint)
             }
         }
@@ -146,13 +146,13 @@ struct PostRaceView: View {
                     Text(faster
                          ? "\(Fmt.signedClock(delta)) on your recent average."
                          : "\(Fmt.signedClock(delta)) off your recent average.")
-                        .font(Body.headline(18))
+                        .font(Prose.headline(18))
                         .foregroundStyle(Track.chalk)
                         .fixedSize(horizontal: false, vertical: true)
                     Text(faster
                          ? "That's the number that moves your handicap."
                          : "Your handicap holds. The board doesn't care about one race.")
-                        .font(Body.caption(15))
+                        .font(Prose.caption(15))
                         .foregroundStyle(Track.chalkDim)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -216,7 +216,7 @@ struct PostRaceView: View {
                             .frame(width: 22, alignment: .leading)
                         AvatarView(mark: racer.mark, color: racer.color, size: 28)
                         Text(racer.isUser ? "You" : racer.displayName)
-                            .font(Body.copy(17))
+                            .font(Prose.copy(17))
                             .foregroundStyle(racer.isUser ? Track.chalk : Track.chalkDim)
                         Spacer()
                         Text(Fmt.clock(result.times[id] ?? 0))
@@ -368,7 +368,7 @@ struct EmptyLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(text)
-                .font(Body.copy(17))
+                .font(Prose.copy(17))
                 .foregroundStyle(Track.chalkDim)
                 .fixedSize(horizontal: false, vertical: true)
             if let actionTitle, let action {

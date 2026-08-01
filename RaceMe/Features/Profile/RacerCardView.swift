@@ -61,7 +61,7 @@ struct RacerCardView: View {
                 HStack(spacing: 9) {
                     AvatarView(mark: profile.mark, color: Track.you, size: 30)
                     Text(profile.handle.isEmpty ? "you" : profile.handle)
-                        .font(Body.headline(19))
+                        .font(Prose.headline(19))
                         .foregroundStyle(Track.chalk)
                 }
             }
@@ -88,7 +88,7 @@ struct RacerCardView: View {
                 .minimumScaleFactor(0.6)
             if !compact {
                 Text(profile.archetype.blurb)
-                    .font(Body.copy(17))
+                    .font(Prose.copy(17))
                     .foregroundStyle(Track.chalkDim)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -204,7 +204,7 @@ struct RacerCardView: View {
 /// top of the profile.
 private struct CardSurface: ViewModifier {
     let plain: Bool
-    let namespace: Namespace.ID
+    let namespace: Namespace.ID?
 
     func body(content: Content) -> some View {
         if plain {
@@ -219,7 +219,7 @@ private struct CardSurface: ViewModifier {
         } else {
             content
                 .glassEffect(.regular.tint(Track.elevated.opacity(0.55)), in: .rect(cornerRadius: 26))
-                .glassEffectID(GlassID.racerCard, in: namespace)
+                .modifier(OptionalGlassID(id: GlassID.racerCard, namespace: namespace))
         }
     }
 }
@@ -234,7 +234,7 @@ private struct TraitLane: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(trait.name)
-                .font(Body.caption(15))
+                .font(Prose.caption(15))
                 .foregroundStyle(Track.chalkDim)
                 .frame(width: 86, alignment: .leading)
 
@@ -292,10 +292,10 @@ struct CardRevealScreen: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("This is your card.")
-                    .font(Body.title(32))
+                    .font(Prose.title(32))
                     .foregroundStyle(Track.chalk)
                 Text("It changes every time you race.")
-                    .font(Body.copy(18))
+                    .font(Prose.copy(18))
                     .foregroundStyle(Track.chalkDim)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

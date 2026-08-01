@@ -95,15 +95,17 @@ struct AvatarView: View {
         .accessibilityHidden(true)
     }
 
-    @ViewBuilder
-    private var shape: some Shape {
+    /// `AnyShape`, not `@ViewBuilder`. ViewBuilder composes branches into
+    /// `_ConditionalContent`, which conforms to `View` but not to `Shape` — so a
+    /// switch returning `some Shape` can't be built that way.
+    private var shape: AnyShape {
         switch mark {
-        case .chevron: ChevronMark()
-        case .bars: BarsMark()
-        case .ring: RingMark()
-        case .blade: BladeMark()
-        case .grid: GridMark()
-        case .spike: SpikeMark()
+        case .chevron: AnyShape(ChevronMark())
+        case .bars: AnyShape(BarsMark())
+        case .ring: AnyShape(RingMark())
+        case .blade: AnyShape(BladeMark())
+        case .grid: AnyShape(GridMark())
+        case .spike: AnyShape(SpikeMark())
         }
     }
 }

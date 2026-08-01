@@ -40,7 +40,7 @@ struct ProfileView: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(profile.handle.isEmpty ? "You" : "@\(profile.handle)")
-                .font(Body.title(30))
+                .font(Prose.title(30))
                 .foregroundStyle(Track.chalk)
             Spacer()
             Button {
@@ -340,7 +340,7 @@ struct SettingsView: View {
                     LabeledContent("Plan", value: profile.isSubscribed ? "Full" : "Free")
                     if !profile.isSubscribed {
                         Text("Free gives you one race a week. Everything else — unlimited racing, the league, your card — is on the paid plan.")
-                            .font(Body.caption(14))
+                            .font(Prose.caption(14))
                             .foregroundStyle(Track.chalkDim)
                     }
                 } header: {

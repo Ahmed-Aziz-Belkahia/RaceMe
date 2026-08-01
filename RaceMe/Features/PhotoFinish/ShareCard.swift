@@ -42,7 +42,7 @@ struct ShareCardView: View {
                 .padding(.top, 40)
 
                 Text(subhead)
-                    .font(Body.copy(17))
+                    .font(Prose.copy(17))
                     .foregroundStyle(Track.chalkDim)
                     .padding(.horizontal, 26)
                     .padding(.top, 10)

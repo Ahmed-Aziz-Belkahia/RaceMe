@@ -52,7 +52,7 @@ struct PaceScreen: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("How fast is a comfortable mile for you?")
-                    .font(Body.title(32))
+                    .font(Prose.title(32))
                     .foregroundStyle(Track.chalk)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -80,7 +80,7 @@ struct PaceScreen: View {
                 }
 
                 Text(effortLabel)
-                    .font(Body.headline(19))
+                    .font(Prose.headline(19))
                     .foregroundStyle(effortColor)
                     .contentTransition(.opacity)
                     .animation(motion.animation(Spring.snap), value: effortLabel)
@@ -93,7 +93,7 @@ struct PaceScreen: View {
                 .padding(.horizontal, 24)
 
             Text("We'll learn this from your runs anyway.")
-                .font(Body.caption(15))
+                .font(Prose.caption(15))
                 .foregroundStyle(Track.chalkFaint)
                 .padding(.horizontal, 24)
                 .padding(.top, 16)

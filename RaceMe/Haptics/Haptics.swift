@@ -180,7 +180,7 @@ final class Haptics {
         case .countdownTick(let i):
             // Each tick harder and brighter than the last. Anticipation is built
             // in the hand before it's built on screen.
-            let step = Double(min(max(i, 0), 2))
+            let step = Float(min(max(i, 0), 2))
             return try CHHapticPattern(events: [
                 transient(0, intensity: 0.5 + 0.16 * step, sharpness: 0.4 + 0.2 * step),
             ], parameters: [])
@@ -189,7 +189,7 @@ final class Haptics {
             return try CHHapticPattern(events: [
                 transient(0, intensity: 1.0, sharpness: 1.0),
                 continuous(0.01, duration: 0.16, intensity: 0.7, sharpness: 0.55),
-            ], parameters: [
+            ], parameterCurves: [
                 CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
                     .init(relativeTime: 0.01, value: 1.0),
                     .init(relativeTime: 0.17, value: 0.0),
@@ -208,7 +208,7 @@ final class Haptics {
             return try CHHapticPattern(events: [
                 transient(0, intensity: 1.0, sharpness: 0.95),
                 continuous(0.03, duration: 0.34, intensity: 0.55, sharpness: 0.25),
-            ], parameters: [
+            ], parameterCurves: [
                 CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
                     .init(relativeTime: 0.03, value: 0.18),
                     .init(relativeTime: 0.30, value: 1.0),
@@ -226,7 +226,7 @@ final class Haptics {
             return try CHHapticPattern(events: [
                 transient(0, intensity: 0.62, sharpness: 0.12),
                 continuous(0.02, duration: 0.3, intensity: 0.45, sharpness: 0.1),
-            ], parameters: [
+            ], parameterCurves: [
                 CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
                     .init(relativeTime: 0.02, value: 0.85),
                     .init(relativeTime: 0.32, value: 0.0),
@@ -234,10 +234,11 @@ final class Haptics {
             ])
 
         case .heartbeat(let p):
-            let base = 0.35 + 0.5 * p
+            let rise = Float(min(max(p, 0), 1))
+            let base = 0.35 + 0.5 * rise
             return try CHHapticPattern(events: [
-                transient(0, intensity: base, sharpness: 0.18 + 0.2 * p),
-                transient(0.13, intensity: base * 0.66, sharpness: 0.14 + 0.16 * p),
+                transient(0, intensity: base, sharpness: 0.18 + 0.2 * rise),
+                transient(0.13, intensity: base * 0.66, sharpness: 0.14 + 0.16 * rise),
             ], parameters: [])
 
         case .reaction:
@@ -253,7 +254,7 @@ final class Haptics {
                 transient(0.1, intensity: 0.92, sharpness: 0.7),
                 transient(0.18, intensity: 1.0, sharpness: 0.85),
                 continuous(0.2, duration: 0.55, intensity: 0.8, sharpness: 0.35),
-            ], parameters: [
+            ], parameterCurves: [
                 CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
                     .init(relativeTime: 0.20, value: 1.0),
                     .init(relativeTime: 0.42, value: 0.62),
@@ -268,7 +269,7 @@ final class Haptics {
                 transient(0.18, intensity: 1.0, sharpness: 0.9),
                 continuous(0.2, duration: 0.6, intensity: 0.85, sharpness: 0.45),
                 transient(0.62, intensity: 1.0, sharpness: 1.0),
-            ], parameters: [
+            ], parameterCurves: [
                 CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
                     .init(relativeTime: 0.20, value: 1.0),
                     .init(relativeTime: 0.55, value: 0.5),
@@ -281,7 +282,7 @@ final class Haptics {
             // not scolded.
             return try CHHapticPattern(events: [
                 continuous(0, duration: 0.22, intensity: 0.5, sharpness: 0.05),
-            ], parameters: [
+            ], parameterCurves: [
                 CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
                     .init(relativeTime: 0, value: 0.75),
                     .init(relativeTime: 0.22, value: 0.0),

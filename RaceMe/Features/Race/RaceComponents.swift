@@ -205,7 +205,7 @@ private struct OpponentCard: View {
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(racer.displayName)
-                        .font(Body.copy(17))
+                        .font(Prose.copy(17))
                         .foregroundStyle(Track.chalk)
                         .lineLimit(1)
                     Text(Fmt.pace(state.pace) + "/km")
@@ -256,7 +256,7 @@ struct CommentaryTicker: View {
                         .fill(latest.accent.color)
                         .frame(width: 2, height: 15)
                     Text(latest.text)
-                        .font(Body.copy(17))
+                        .font(Prose.copy(17))
                         .foregroundStyle(latest.accent == .neutral ? Track.chalkDim : latest.accent.color)
                         .lineLimit(1)
                     Spacer(minLength: 0)
@@ -396,10 +396,10 @@ struct FaultBanner: View {
                 .foregroundStyle(Track.signal)
             VStack(alignment: .leading, spacing: 2) {
                 Text(fault.headline)
-                    .font(Body.caption(15))
+                    .font(Prose.caption(15))
                     .foregroundStyle(Track.chalk)
                 Text(fault.recovery)
-                    .font(Body.caption(14))
+                    .font(Prose.caption(14))
                     .foregroundStyle(Track.chalkDim)
             }
             Spacer(minLength: 0)

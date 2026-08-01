@@ -42,11 +42,11 @@ struct HookScreen: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text(cards[index].title)
-                    .font(Body.title(34))
+                    .font(Prose.title(34))
                     .foregroundStyle(Track.chalk)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(cards[index].sub)
-                    .font(Body.copy(17))
+                    .font(Prose.copy(17))
                     .foregroundStyle(Track.chalkDim)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -203,33 +203,32 @@ private struct BoardMock: View {
     @State private var timer: Task<Void, Never>?
     @Environment(\.motion) private var motion
 
-    private let rows: [(String, Int, Bool)] = [
-        ("Karim", 812, false), ("You", 806, true), ("Noor", 794, false), ("Tobi", 771, false),
+    /// A named type rather than a `(String, Int, Bool)` tuple.
+    ///
+    /// Subscripting an anonymous tuple array three times inside a view builder
+    /// (`rows[row].0`, `.1`, `.2`) gave the type checker enough overloads to
+    /// consider that it gave up: "unable to type-check this expression in
+    /// reasonable time". Named fields and an extracted row view fix it, and read
+    /// better anyway.
+    private struct Standing: Identifiable {
+        let id: Int
+        let name: String
+        let points: Int
+        let isUser: Bool
+    }
+
+    private let rows: [Standing] = [
+        Standing(id: 0, name: "Karim", points: 812, isUser: false),
+        Standing(id: 1, name: "You", points: 806, isUser: true),
+        Standing(id: 2, name: "Noor", points: 794, isUser: false),
+        Standing(id: 3, name: "Tobi", points: 771, isUser: false),
     ]
 
     var body: some View {
         MockFrame(label: "WEEKLY LEAGUE · SILVER") {
             VStack(spacing: 6) {
                 ForEach(Array(order.enumerated()), id: \.element) { position, row in
-                    HStack(spacing: 10) {
-                        Text("\(position + 1)")
-                            .font(Bib.numeral(16))
-                            .foregroundStyle(position < 2 ? Track.you : Track.chalkFaint)
-                            .frame(width: 16, alignment: .leading)
-                        Text(rows[row].0)
-                            .font(Body.caption(15))
-                            .foregroundStyle(rows[row].2 ? Track.chalk : Track.chalkDim)
-                        Spacer()
-                        Text("\(rows[row].1)")
-                            .font(Bib.mono(14, weight: .bold))
-                            .foregroundStyle(rows[row].2 ? Track.you : Track.chalkFaint)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(rows[row].2 ? Track.you.opacity(0.12) : Color.clear)
-                    }
+                    standingRow(rows[row], position: position)
                 }
             }
             .animation(motion.animation(Spring.reorder), value: order)
@@ -249,6 +248,29 @@ private struct BoardMock: View {
             }
         }
         .onDisappear { timer?.cancel() }
+    }
+
+    private func standingRow(_ standing: Standing, position: Int) -> some View {
+        let promoting = position < 2
+        return HStack(spacing: 10) {
+            Text("\(position + 1)")
+                .font(Bib.numeral(16))
+                .foregroundStyle(promoting ? Track.you : Track.chalkFaint)
+                .frame(width: 16, alignment: .leading)
+            Text(standing.name)
+                .font(Prose.caption(15))
+                .foregroundStyle(standing.isUser ? Track.chalk : Track.chalkDim)
+            Spacer()
+            Text("\(standing.points)")
+                .font(Bib.mono(14, weight: .bold))
+                .foregroundStyle(standing.isUser ? Track.you : Track.chalkFaint)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(standing.isUser ? Track.you.opacity(0.12) : Color.clear)
+        }
     }
 }
 
