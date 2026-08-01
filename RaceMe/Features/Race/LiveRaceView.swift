@@ -174,9 +174,11 @@ struct LiveRaceView: View {
                 model.receive(Reaction(from: profile.handle.isEmpty ? "you" : profile.handle, at: Date()))
             }
 
+            // Untinted. Aqua means "an opponent" everywhere else in the app, and
+            // a control is not an opponent — a teal stop button quietly teaches
+            // the wrong thing about the one colour rule that has to hold.
             GlassCircleButton(
                 systemImage: "stop.fill",
-                tint: Track.them,
                 size: 56,
                 haptic: .select,
                 accessibilityName: "End race"
@@ -206,11 +208,16 @@ struct LiveRaceView: View {
 
     // MARK: Geometry
 
-    /// The lane gets a third of the screen, floored so it never collapses on a
-    /// small device and the chalk stays readable.
+    /// The lane is the hero and has to look like it.
+    ///
+    /// A head-to-head is only two lanes, and at 52 points each that floored out
+    /// at 150 — a thin strip adrift in whitespace rather than the subject of the
+    /// screen. Two-runner races now get taller lanes so the block reads as
+    /// substantial whatever the field size.
     private var laneHeight: CGFloat {
         let lanes = max(model.config.participants.count, 2)
-        return min(max(CGFloat(lanes) * 52 + 30, 150), 250)
+        let perLane: CGFloat = lanes <= 2 ? 86 : lanes <= 4 ? 62 : 48
+        return min(max(CGFloat(lanes) * perLane + 24, 190), 270)
     }
 
     private var headlineOpponent: Racer? {

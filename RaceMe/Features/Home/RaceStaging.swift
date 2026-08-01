@@ -96,7 +96,11 @@ enum RaceStaging {
         return StagedRace(
             config: config,
             rationale: rationale,
-            projectedOutcome: RaceCalibrator.project(config: config, scoring: scoring)
+            projectedOutcome: RaceCalibrator.project(
+                config: config,
+                scoring: scoring,
+                userRacePaceSecPerKm: profile.race5KPaceSecPerKm
+            )
         )
     }
 

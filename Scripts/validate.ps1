@@ -49,6 +49,7 @@ try {
     $sources = @(
         'RaceMe\Simulation\Rng.swift'
         'RaceMe\Model\Archetype.swift'
+        'RaceMe\Simulation\PaceSpread.swift'
         'RaceMe\Simulation\GhostRunner.swift'
         'Validation\main.swift'
     ) -join ' '

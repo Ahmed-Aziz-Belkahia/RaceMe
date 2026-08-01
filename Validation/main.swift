@@ -321,6 +321,40 @@ check("archetypes are equal-effort", biasSpread < 6.0,
       "worst-to-best spread \(f(biasSpread, 1))s over a 5K, want < 6s")
 
 // ---------------------------------------------------------------------------
+print("\n[3c] Matchmaking — the pace distribution the app actually draws from")
+print("      Earlier passes raced hand-picked paces and never exercised this,")
+print("      which is how a three-sigma opponent ten percent faster than the")
+print("      user reached a screenshot.")
+
+for (label, difficulty) in [("beginner", 0.25), ("committed", 0.7), ("won't lose", 0.92)] {
+    var rng = Rng(seed: 0xFA112)
+    let userPace = 290.0
+    var margins: [Double] = []
+    var worst = 0.0
+
+    for i in 0..<150 {
+        let opponentPace = PaceSpread.opponentPace(
+            userRacePaceSecPerKm: userPace,
+            difficulty: difficulty,
+            intent: .tossUp,
+            rng: &rng
+        )
+        worst = max(worst, abs(opponentPace / userPace - 1))
+        let o = race(distance: 5000, paceA: userPace, paceB: opponentPace,
+                     archetypeA: archetypes[i % 5], archetypeB: archetypes[(i / 5) % 5],
+                     seed: UInt64(i &* 911 &+ 3))
+        margins.append(o.marginSeconds)
+    }
+    let med = median(margins)
+    let p90 = margins.sorted()[Int(Double(margins.count) * 0.9)]
+    print("  \(label.padding(toLength: 12, withPad: " ", startingAt: 0))"
+          + "median margin \(f(med, 1))s   90th pct \(f(p90, 1))s   "
+          + "widest pace draw \(f(worst * 100, 1))%")
+    check("\(label) fields race close", med <= 20 && p90 <= 55,
+          "median \(f(med,1))s, p90 \(f(p90,1))s")
+}
+
+// ---------------------------------------------------------------------------
 print("\n[4] Determinism — same seed must reproduce the same race")
 print("      Challenge links replay the sender's ghost on someone else's phone.")
 

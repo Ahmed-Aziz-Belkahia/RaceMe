@@ -213,7 +213,11 @@ private struct OpponentCard: View {
                         .foregroundStyle(Track.chalkFaint)
                 }
 
-                Text(Fmt.signedMeters(-gap))
+                // The user's frame of reference, same as the hero readout. It
+                // previously showed the inverse, so the screen said "−9" in
+                // 112pt and "+9" two hundred points below it — the same fact,
+                // twice, with opposite signs.
+                Text(Fmt.signedMeters(gap))
                     .font(Bib.numeral(23))
                     .bibTracking(23)
                     .foregroundStyle(ahead ? Track.chalkDim : racer.color)

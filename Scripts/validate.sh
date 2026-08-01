@@ -13,6 +13,7 @@ cd "$(dirname "$0")/.."
 swiftc -O \
   RaceMe/Simulation/Rng.swift \
   RaceMe/Model/Archetype.swift \
+  RaceMe/Simulation/PaceSpread.swift \
   RaceMe/Simulation/GhostRunner.swift \
   Validation/main.swift \
   -o validate

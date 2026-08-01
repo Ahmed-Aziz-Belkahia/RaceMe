@@ -397,6 +397,12 @@ final class RaceEngine {
     /// A surge is a *sustained* move, not a noisy second. Compared against the
     /// runner's own recent average so a fast runner cruising isn't called a surge.
     private func detectSurges() {
+        // Nothing is a "surge" in the first ninety seconds. Everyone is still
+        // settling into pace, the comparison windows are barely populated, and
+        // "Karim surged" twenty-two seconds into a 5K is the ticker crying wolf
+        // on the first line it ever prints.
+        guard elapsed > 90 else { return }
+
         for (id, _) in ghosts {
             guard let s = states[id], !s.finished, s.pace > 0 else { continue }
             var history = paceHistory[id, default: []]

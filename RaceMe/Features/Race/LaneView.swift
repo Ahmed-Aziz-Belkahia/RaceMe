@@ -148,11 +148,26 @@ struct LaneView: View {
         let firstMark = (userDistance / spacing).rounded(.down) * spacing - spacing * 8
         var minor = Path()
         var major = Path()
+
+        // Ticks are dropped once the compression squeezes them closer than this.
+        //
+        // The curve is logarithmic far from the runner, so beyond a few hundred
+        // metres every remaining mark lands within a point or two of the last
+        // one. Drawn literally that became a solid band of white hash at the
+        // edge of the lane — not chalk, just noise. Enforcing a minimum gap
+        // makes the marks thin out with distance, which is what looking down a
+        // track actually does.
+        let minimumGap: CGFloat = 9
+        var lastDrawn: CGFloat = -.greatestFiniteMagnitude
+
         for step in 0...40 {
             let mark = firstMark + Double(step) * spacing
             guard mark >= 0, mark <= engine.distanceMeters else { continue }
             let px = centreX + x(mark - userDistance)
             guard px > -20, px < size.width + 20 else { continue }
+            guard px - lastDrawn >= minimumGap else { continue }
+            lastDrawn = px
+
             let isMajor = mark.truncatingRemainder(dividingBy: 100) < 0.5
             if isMajor {
                 major.move(to: CGPoint(x: px, y: top))
@@ -190,7 +205,10 @@ struct LaneView: View {
         userDistance: Double, centreX: CGFloat
     ) {
         let px = centreX + x(engine.distanceMeters - userDistance)
-        guard px < size.width + 40 else { return }
+        // Not drawn until it's properly on screen. Half a chip mat clipped to
+        // the right edge reads as a rendering artifact, not as a finish line
+        // still a long way off.
+        guard px < size.width - 8 else { return }
 
         // Chip mat: the black-and-white checker band before the line.
         let matWidth: CGFloat = 14
