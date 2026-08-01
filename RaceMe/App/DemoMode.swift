@@ -137,10 +137,14 @@ enum DemoMode {
         }
 
         let results = await Task.detached(priority: .userInitiated) { () -> [RaceResult] in
-            let distances: [Double] = [5000, 5000, 3000, 5000, 1609.344, 10_000]
+            // Four, and no 10K. Every extra kilometre is thousands more engine
+            // steps, and a shelf of four photo finishes demonstrates the feature
+            // exactly as well as six does.
+            let distances: [Double] = [5000, 3000, 5000, 1609.344]
             var out: [RaceResult] = []
 
             for (i, distance) in distances.enumerated() {
+                let began = Date()
                 var opponent = MockRoster.racer(
                     index: i, paceSecPerKm: inputs.racePace, seed: UInt64(i) &+ 400
                 )
@@ -178,6 +182,7 @@ enum DemoMode {
                 var result = engine.makeResult(baselinePace: inputs.handicap, isPR: i == 2)
                 result.finishedAt = Date().addingTimeInterval(-Double(i + 1) * 86_400 * 2.5)
                 out.append(result)
+                log("seeded \(Fmt.raceName(distance)) in \(steps) steps, \(String(format: "%.2f", Date().timeIntervalSince(began)))s")
             }
             return out
         }.value

@@ -78,12 +78,21 @@ final class AppState {
         DemoMode.seed(profile)
         DemoMode.log("start: screen=\(DemoMode.screen?.rawValue ?? "nil") seeds=\(DemoMode.seedsProfile) onboarded=\(profile.completedOnboarding)")
         liveRaces.start()
+
+        // Get to a usable screen first. Nothing here depends on race history,
+        // and making the whole app wait on a demo fixture was why every seeded
+        // screen rendered its background and nothing else.
+        Task {
+            await refresh()
+            DemoMode.log("refresh: done staged=\(stagedRace != nil) league=\(league != nil)")
+            applyDemoScreen()
+        }
+
+        // History fills in behind the UI and refreshes it when it lands.
         Task {
             await DemoMode.seedHistory(into: services.history, profile: profile)
-            DemoMode.log("refresh: begin")
             await refresh()
-            DemoMode.log("refresh: done staged=\(stagedRace != nil) results=\(recentResults.count) league=\(league != nil)")
-            applyDemoScreen()
+            DemoMode.log("seed refresh: results=\(recentResults.count)")
         }
     }
 
