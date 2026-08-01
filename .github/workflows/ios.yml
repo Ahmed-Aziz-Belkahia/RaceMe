@@ -69,6 +69,11 @@ jobs:
       - name: Show available simulators
         run: xcrun simctl list devices available
 
+      # Proves the project parses and the shared scheme is visible. If this step
+      # fails, the problem is the project file — not the Swift.
+      - name: Show project targets and schemes
+        run: xcodebuild -project RaceMe.xcodeproj -list
+
       - name: Build
         run: |
           set -o pipefail
@@ -76,11 +81,29 @@ jobs:
             -project RaceMe.xcodeproj \
             -scheme RaceMe \
             -configuration Debug \
-            -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            build 2>&1 | tee build.log
+        continue-on-error: true
+
+      # Compiler errors, pulled out of a very long log and dropped into the run
+      # summary — which is readable without downloading anything.
+      - name: Summarise compiler errors
+        if: always()
+        run: |
+          {
+            echo "## Build errors"
+            echo '```'
+            grep -E 'error:|warning: .*deprecat' build.log | head -80 || echo "(none found)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Fail the job for real if anything errored.
+          if grep -q 'error:' build.log; then
+            echo "Build had errors."
+            grep -E 'error:' build.log | head -60
+            exit 1
+          fi
 
       - name: Screenshot every screen
         run: |
@@ -133,7 +156,7 @@ jobs:
             -project RaceMe.xcodeproj \
             -scheme RaceMe \
             -configuration Release \
-            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
