@@ -107,60 +107,85 @@ enum DemoMode {
         print("[RACEME-DEMO] \(message)")
     }
 
-    @MainActor
+    /// Runs the races off the main actor, coarsely, then hands back finished
+    /// results.
+    ///
+    /// The first version did this inline on the main actor at a fixed 60Hz. Six
+    /// races, one of them a 10K, is roughly half a million engine steps — and in
+    /// an unoptimised Debug build each step sorts the field twice and allocates
+    /// a dictionary. It never finished, so the app rendered its background and
+    /// nothing else. Adding `Task.yield()` didn't help: the main thread was
+    /// still saturated.
+    ///
+    /// Two changes fix it. The simulation moves to a detached task, because it's
+    /// pure computation with no UI in it. And the step size is adaptive — coarse
+    /// for the body of the race, fine only through the closing stretch where the
+    /// photo finish actually samples. Same picture at the line, a fraction of
+    /// the work.
     static func seedHistory(into history: RaceHistoryService, profile: RunnerProfile) async {
         guard seedsProfile else { return }
         log("seedHistory: begin")
 
-        let distances: [Double] = [5000, 5000, 3000, 5000, 1609.344, 10_000]
-        for (i, distance) in distances.enumerated() {
-            let user = profile.asRacer()
-            var opponent = MockRoster.racer(
-                index: i, paceSecPerKm: profile.race5KPaceSecPerKm, seed: UInt64(i) &+ 400
+        // Snapshot everything off the profile before leaving the main actor.
+        let inputs = await MainActor.run {
+            (
+                user: profile.asRacer(),
+                racePace: profile.race5KPaceSecPerKm,
+                handicap: profile.handicapPaceSecPerKm,
+                shape: profile.archetype.paceShape
             )
-            opponent.displayName = i == 0 ? "Karim" : opponent.displayName
+        }
 
-            let config = RaceConfig(
-                distanceMeters: distance,
-                mode: .headToHead,
-                scoring: i % 3 == 0 ? .fair : .raw,
-                participants: RaceCalibrator.buildField(
-                    user: user,
-                    userRacePaceSecPerKm: profile.race5KPaceSecPerKm,
-                    opponents: [opponent],
-                    difficulty: 0.8,
-                    seed: 0xD3E0 &+ UInt64(i)
+        let results = await Task.detached(priority: .userInitiated) { () -> [RaceResult] in
+            let distances: [Double] = [5000, 5000, 3000, 5000, 1609.344, 10_000]
+            var out: [RaceResult] = []
+
+            for (i, distance) in distances.enumerated() {
+                var opponent = MockRoster.racer(
+                    index: i, paceSecPerKm: inputs.racePace, seed: UInt64(i) &+ 400
                 )
-            )
+                opponent.displayName = i == 0 ? "Karim" : opponent.displayName
 
-            let movement = SimulatedMovementSource(
-                paceSecPerKm: profile.race5KPaceSecPerKm * (0.98 + Double(i) * 0.008),
-                shape: profile.archetype.paceShape,
-                seed: 0xD3E0 &+ UInt64(i &* 31)
-            )
-            let engine = RaceEngine(config: config, movement: movement, seed: 0xD3E0 &+ UInt64(i))
-            engine.start()
+                let config = RaceConfig(
+                    distanceMeters: distance,
+                    mode: .headToHead,
+                    scoring: i % 3 == 0 ? .fair : .raw,
+                    participants: RaceCalibrator.buildField(
+                        user: inputs.user,
+                        userRacePaceSecPerKm: inputs.racePace,
+                        opponents: [opponent],
+                        difficulty: 0.8,
+                        seed: 0xD3E0 &+ UInt64(i)
+                    )
+                )
 
-            // 60Hz fixed step so the finish sampling matches a real race exactly.
-            //
-            // This runs on the main actor and a 10K is well over a hundred
-            // thousand iterations, so it yields periodically. Without that it
-            // pins the main thread and the app renders nothing at all until
-            // every race has finished — which is exactly what it did.
-            var guardCounter = 0
-            while !engine.isFinished, guardCounter < 400_000 {
-                engine.tick(dt: 1.0 / 60.0)
-                guardCounter += 1
-                if guardCounter % 2_000 == 0 { await Task.yield() }
+                let movement = SimulatedMovementSource(
+                    paceSecPerKm: inputs.racePace * (0.98 + Double(i) * 0.008),
+                    shape: inputs.shape,
+                    seed: 0xD3E0 &+ UInt64(i &* 31)
+                )
+                let engine = RaceEngine(config: config, movement: movement, seed: 0xD3E0 &+ UInt64(i))
+                engine.start()
+
+                var steps = 0
+                while !engine.isFinished, steps < 200_000 {
+                    // Fine only where the picture is taken.
+                    let dt = engine.remainingMeters < 80 ? 1.0 / 60.0 : 1.0 / 8.0
+                    engine.tick(dt: dt)
+                    steps += 1
+                }
+
+                var result = engine.makeResult(baselinePace: inputs.handicap, isPR: i == 2)
+                result.finishedAt = Date().addingTimeInterval(-Double(i + 1) * 86_400 * 2.5)
+                out.append(result)
             }
-            log("seeded race \(i + 1)/\(distances.count) — \(Fmt.raceName(distance)) in \(guardCounter) steps")
+            return out
+        }.value
 
-            var result = engine.makeResult(
-                baselinePace: profile.handicapPaceSecPerKm,
-                isPR: i == 2
-            )
-            result.finishedAt = Date().addingTimeInterval(-Double(i + 1) * 86_400 * 2.5)
+        log("seedHistory: simulated \(results.count) races")
+        for result in results {
             try? await history.save(result)
         }
+        log("seedHistory: saved")
     }
 }
