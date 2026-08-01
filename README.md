@@ -5,6 +5,30 @@ iOS 26, SwiftUI, no dependencies. Open `RaceMe.xcodeproj` and run.
 The project uses Xcode 16+ file-system-synchronized folders, so every `.swift` file under
 `RaceMe/` compiles automatically — there is no file list in the project to keep in sync.
 
+## Jumping straight to a screen
+
+Debug builds read launch arguments, so you don't tap through seventeen onboarding
+panels to look at the leaderboard:
+
+```
+-demoScreen home       # or: race, postRace, board, profile, spectate
+-demoScreen card       # or: coldOpen, hook, pace, compute, paywall
+-demoSeed  YES         # populated profile + six real races of history
+-demoFreeze YES        # stops ambient drift so screenshots are reproducible
+```
+
+Set them in **Product → Scheme → Edit Scheme → Run → Arguments**, or pass them to
+`xcrun simctl launch`. `-demoScreen` implies `-demoSeed` wherever the screen needs data.
+
+The seeded history isn't fixtures — `DemoMode.seedHistory` ticks the real `RaceEngine`
+to the line six times, so the photo finishes on that shelf are genuine slit-scans of
+races that actually happened.
+
+`./Scripts/screenshots.sh` builds, boots a simulator, and captures all twelve screens
+into `screenshots/`. The same script runs in CI (`.github/workflows/ios.yml`) and
+uploads the PNGs as an artifact — which is how you look at this from a machine that
+can't run Xcode.
+
 ## Demoing it at a desk
 
 `AppState.useSimulatedMovement` defaults to `true` in Debug and on the Simulator, so the
