@@ -1,0 +1,76 @@
+name: Build and screenshot
+
+# Builds RaceMe on a macOS runner and uploads a screenshot of every screen as an
+# artifact. This is how the app gets looked at from a machine that can't run
+# Xcode.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # RaceMe targets the iOS 26 SDK, which needs Xcode 26. Print what the
+      # runner actually has before doing anything, so a toolchain mismatch is
+      # obvious in the log instead of showing up as a wall of API errors.
+      - name: Show available Xcode versions
+        run: |
+          ls /Applications | grep -i '^Xcode' || true
+          xcodebuild -version
+
+      - name: Select the newest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST/Contents/Developer"
+          xcodebuild -version
+
+      - name: Show available simulators
+        run: xcrun simctl list devices available
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project RaceMe.xcodeproj \
+            -scheme RaceMe \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Screenshot every screen
+        run: |
+          chmod +x Scripts/screenshots.sh
+          # Fall back to whatever iPhone the runner actually has.
+          DEVICE=$(xcrun simctl list devices available \
+            | grep -oE 'iPhone [0-9]+ Pro' | tail -1)
+          DEVICE=${DEVICE:-iPhone 16 Pro}
+          echo "Using $DEVICE"
+          ./Scripts/screenshots.sh "$DEVICE"
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raceme-screenshots
+          path: screenshots/
+          if-no-files-found: warn
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build/Logs/
+          if-no-files-found: ignore
