@@ -11,7 +11,36 @@ on:
   workflow_dispatch:
 
 jobs:
+  # The race simulator is pure Foundation, so it compiles and runs on Linux in
+  # about a minute — no Mac, no simulator, no waiting. It races thousands of
+  # times and asserts the properties the product depends on: close finishes,
+  # leads that genuinely trade, realistic splits, a late kick, and handicap
+  # racing that a slower runner can actually win.
+  #
+  # This job caught handicap racing being decided by archetype draw rather than
+  # by effort. Keep it first — if the physics is wrong, the UI doesn't matter.
+  simulator:
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the validation harness
+        run: |
+          swiftc -O \
+            RaceMe/Simulation/Rng.swift \
+            RaceMe/Model/Archetype.swift \
+            RaceMe/Simulation/GhostRunner.swift \
+            Validation/main.swift \
+            -o validate
+
+      - name: Race it ten thousand times
+        run: ./validate
+
   build:
+    needs: simulator
     # RaceMe needs the iOS 26 SDK, which means Xcode 26.
     # If this image doesn't exist yet on your account, the job fails instantly
     # with "no runner matching labels" — change this one line to macos-15 and

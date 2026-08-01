@@ -76,6 +76,36 @@ smear is computed from the positions the engine sampled at 60Hz through the fini
 runner prints narrow and a fading one prints wide. Change the race and you get a different
 picture.
 
+## Validating the simulator without a Mac
+
+The race simulator is pure Foundation — no SwiftUI, no UIKit — so it compiles and
+runs on Windows and Linux. That matters, because it's the part of the product that
+has to be genuinely good, and it's the only part testable off an Apple machine.
+
+```
+pwsh -File Scripts/validate.ps1     # Windows (needs Swift toolchain + VS 2022)
+./Scripts/validate.sh               # macOS / Linux
+```
+
+It races thousands of times and asserts what the product depends on: finishes stay
+close, leads actually trade, splits vary and drift late, the kick lands in the last
+400, the same seed reproduces the same race (challenge links rely on this), and a
+12:00/mi runner can beat a 7:00/mi runner under handicap scoring.
+
+Current numbers, 5K scratch: median margin 7.3s, 84% of races see at least one lead
+change, and the nominally faster runner wins 63% — a real edge, not a certainty.
+Under handicap, the slower runner takes 32%. Raw distance: 0%.
+
+The same harness runs first in CI on a Linux container, before anything touches a
+macOS runner. If the physics is wrong the UI doesn't matter.
+
+It has already earned its keep twice. It caught handicap racing being decided by
+which archetype you drew rather than how you ran — the raw pace shapes didn't
+average to 1, so a Grinder was 0.7% slower than their own baseline before taking a
+step, and the disadvantaged runner won 0% of 300 races. `Archetype.paceShape` now
+normalises to a unit duration-weighted mean. It also confirmed why
+`RaceEngine.recomputeScores` has to freeze a finisher's score at the line.
+
 ## What's mocked
 
 Everything behind `Services/Services.swift`. There is no backend, no auth, and no database —

@@ -306,45 +306,13 @@ final class RunnerProfile: Codable, @unchecked Sendable {
     }
 }
 
-// MARK: - Archetype
+// MARK: - Archetype derivation
+//
+// The `Archetype` enum itself lives in `Model/Archetype.swift`, which imports
+// nothing but Foundation so the simulation layer can be compiled and run on a
+// non-Apple machine. Only the part that needs a `RunnerProfile` lives here.
 
-/// The payoff of S11. Derived from real answers, so two users with different
-/// answers genuinely get different cards.
-enum Archetype: String, Codable, CaseIterable, Sendable {
-    case closer, frontrunner, metronome, grinder, kicker
-
-    var name: String {
-        switch self {
-        case .closer: "The Closer"
-        case .frontrunner: "The Frontrunner"
-        case .metronome: "The Metronome"
-        case .grinder: "The Grinder"
-        case .kicker: "The Kicker"
-        }
-    }
-
-    var blurb: String {
-        switch self {
-        case .closer: "You don't panic when someone goes early. You just reel them in."
-        case .frontrunner: "You'd rather lead from the gun and make everyone else hurt."
-        case .metronome: "Same split, every kilometre. Boring is a weapon."
-        case .grinder: "You win the races nobody wanted to run."
-        case .kicker: "Sit, wait, and take it in the last 200."
-        }
-    }
-
-    /// Shapes how the *user's* own pace behaves in simulated/ghost races, and how
-    /// the app describes their races afterwards.
-    var paceShape: (opening: Double, middle: Double, close: Double) {
-        switch self {
-        case .closer: (1.02, 1.0, 0.96)
-        case .frontrunner: (0.96, 1.0, 1.04)
-        case .metronome: (1.0, 1.0, 1.0)
-        case .grinder: (1.01, 1.01, 0.99)
-        case .kicker: (1.03, 1.02, 0.92)
-        }
-    }
-
+extension Archetype {
     static func derive(from profile: RunnerProfile) -> Archetype {
         switch (profile.driver, profile.selfImage) {
         case (.someoneAhead, .neverLose): .kicker

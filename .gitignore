@@ -5,3 +5,11 @@ screenshots/
 *.xcuserstate
 xcuserdata/
 *.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# Validation harness build output
+validate
+validate.exe
+validate.lib
+validate.exp
+validate.pdb
+*.obj
