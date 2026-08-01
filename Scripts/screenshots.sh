@@ -54,14 +54,24 @@ for SCREEN in "${SCREENS[@]}"; do
   xcrun simctl launch "$UDID" "$BUNDLE_ID" \
     -demoScreen "$SCREEN" -demoFreeze YES >/dev/null
 
-  # Let the screen settle. The race and compute screens are timed sequences, so
-  # they get long enough to reach the part worth looking at.
+  # Let the screen settle.
+  #
+  # These are generous on purpose. The app is reinstalled before each capture so
+  # every launch is cold, and a cold SwiftUI start on a CI simulator can take
+  # several seconds before the first frame of real content. Screenshotting too
+  # early catches entrance animations at opacity zero and produces a series of
+  # beautifully composed empty screens — which is exactly what the first run of
+  # this script did.
+  #
+  # -demoFreeze also collapses entrance animations to their end state, so this
+  # only has to outlast the launch, not the choreography.
   case "$SCREEN" in
-    race)      sleep 14 ;;   # past the countdown, into the running lane
-    compute)   sleep 3  ;;   # mid-way through the narrated steps
-    coldOpen)  sleep 4  ;;   # after the photo finish resolves into the wordmark
-    postRace)  sleep 3  ;;   # after the print has developed
-    *)         sleep 2  ;;
+    race)      sleep 22 ;;   # cold start + 3-2-1 countdown + enough race to leave trails
+    compute)   sleep 12 ;;   # the narrated steps run 4-6s of real work
+    coldOpen)  sleep 10 ;;   # the 3s film has to resolve into the wordmark first
+    postRace)  sleep 10 ;;   # after the print has developed
+    hook)      sleep 10 ;;
+    *)         sleep 9  ;;
   esac
 
   xcrun simctl io "$UDID" screenshot --type png "$OUT/$SCREEN.png"

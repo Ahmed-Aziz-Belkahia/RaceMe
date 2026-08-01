@@ -62,10 +62,18 @@ extension EnvironmentValues {
 
 /// Bridges the system setting into `\.motion` once, at the root, so no view
 /// downstream has to remember to check two things.
+///
+/// `-demoFreeze` folds in here rather than getting its own flag everywhere.
+/// Reduce Motion already means "show me the destination, not the journey",
+/// which is exactly what a screenshot needs — otherwise every entrance
+/// animation is caught at opacity zero and the capture is of an empty screen.
 struct MotionEnvironment: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func body(content: Content) -> some View {
-        content.environment(\.motion, MotionPreference(reduced: reduceMotion))
+        content.environment(
+            \.motion,
+            MotionPreference(reduced: reduceMotion || DemoMode.freezes)
+        )
     }
 }
 
