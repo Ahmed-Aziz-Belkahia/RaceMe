@@ -12,7 +12,11 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    # RaceMe needs the iOS 26 SDK, which means Xcode 26.
+    # If this image doesn't exist yet on your account, the job fails instantly
+    # with "no runner matching labels" — change this one line to macos-15 and
+    # check the "Show available Xcode versions" step to see what you've got.
+    runs-on: macos-26
     timeout-minutes: 45
 
     steps:
@@ -74,3 +78,48 @@ jobs:
           name: build-logs
           path: build/Logs/
           if-no-files-found: ignore
+
+  # Produces an UNSIGNED .ipa — the app itself, with no Apple signature on it.
+  #
+  # On its own it will not install on a phone. You sign it afterwards with a
+  # free Apple ID using Sideloadly or AltStore on Windows, which is the only way
+  # to get this onto an iPhone without ever touching a Mac. See README.
+  unsigned-ipa:
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select the newest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$LATEST/Contents/Developer"
+          xcodebuild -version
+
+      - name: Build for device, unsigned
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project RaceMe.xcodeproj \
+            -scheme RaceMe \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Wrap it into an .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/RaceMe.app Payload/
+          zip -qry RaceMe-unsigned.ipa Payload
+          ls -lh RaceMe-unsigned.ipa
+
+      - name: Upload the .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: RaceMe-unsigned-ipa
+          path: RaceMe-unsigned.ipa
