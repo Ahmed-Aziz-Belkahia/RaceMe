@@ -50,19 +50,26 @@ final class DisplayLink {
         onFrame(dt)
     }
 
-    deinit {
-        // `link` retains its target, so the proxy — not self — owns the cycle break.
-        link?.invalidate()
-    }
+    // No deinit. Reaching for `link` from a nonisolated deinit isn't allowed
+    // under strict concurrency, and it isn't needed — the proxy below tears the
+    // display link down the first time it fires without an owner.
 }
 
-/// CADisplayLink retains its target. The proxy keeps that retain off the owner
-/// so a race screen that goes away actually deallocates.
+/// CADisplayLink retains its target, so the proxy takes that retain instead of
+/// the owner — otherwise a race screen that goes away never deallocates.
+///
+/// It also self-cleans: once the owner is gone, the next frame invalidates the
+/// link. Without that the display link would sit on the main run loop firing
+/// into nothing for the life of the process.
 private final class DisplayLinkProxy {
     weak var owner: DisplayLink?
     init(_ owner: DisplayLink) { self.owner = owner }
 
     @MainActor @objc func step(_ link: CADisplayLink) {
-        owner?.frame(link)
+        guard let owner else {
+            link.invalidate()
+            return
+        }
+        owner.frame(link)
     }
 }

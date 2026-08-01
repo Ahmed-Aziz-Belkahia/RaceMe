@@ -17,39 +17,47 @@ enum Notifications {
     private static let challengeCategory = "raceme.challenge"
 
     /// Called after the user says yes on our own screen, never before.
+    ///
+    /// Everything needed off the profile is snapshotted into plain values first.
+    /// `UNUserNotificationCenter` isn't `Sendable`, so it's created inside the
+    /// task rather than captured across the isolation boundary.
     static func scheduleRunReminders(for profile: RunnerProfile) {
         guard profile.notificationsGranted else { return }
-        let centre = UNUserNotificationCenter.current()
 
-        // Rebuild from scratch rather than accumulating. Frequency and window
-        // can both change in Settings.
-        centre.getPendingNotificationRequests { requests in
-            let stale = requests
+        let days = weekdays(for: profile)
+        let hour = profile.window.notifyHour
+        let titleText = title(for: profile)
+        let bodyText = body(for: profile)
+
+        Task { @MainActor in
+            let centre = UNUserNotificationCenter.current()
+
+            // Rebuild from scratch rather than accumulating. Frequency and window
+            // can both change in Settings.
+            let pending = await centre.pendingNotificationRequests()
+            let stale = pending
                 .map(\.identifier)
                 .filter { $0.hasPrefix(runReminderPrefix) }
             centre.removePendingNotificationRequests(withIdentifiers: stale)
 
-            Task { @MainActor in
-                for (index, day) in weekdays(for: profile).enumerated() {
-                    var components = DateComponents()
-                    components.weekday = day
-                    components.hour = profile.window.notifyHour
-                    // Twenty minutes before, as promised — expressed against the
-                    // top of their stated window.
-                    components.minute = 0
+            for (index, day) in days.enumerated() {
+                var components = DateComponents()
+                components.weekday = day
+                // Twenty minutes before the top of their stated window, as promised.
+                components.hour = hour > 0 ? hour - 1 : 23
+                components.minute = 40
 
-                    let content = UNMutableNotificationContent()
-                    content.title = title(for: profile)
-                    content.body = body(for: profile)
-                    content.sound = nil          // No sound. Runners have headphones in.
-                    content.interruptionLevel = .active
+                let content = UNMutableNotificationContent()
+                content.title = titleText
+                content.body = bodyText
+                content.sound = nil          // No sound. Runners have headphones in.
+                content.interruptionLevel = .active
 
-                    centre.add(UNNotificationRequest(
-                        identifier: "\(runReminderPrefix)\(index)",
-                        content: content,
-                        trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-                    ))
-                }
+                try? await centre.add(UNNotificationRequest(
+                    identifier: "\(runReminderPrefix)\(index)",
+                    content: content,
+                    trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+                ))
             }
         }
     }
