@@ -51,6 +51,8 @@ final class RaceEngine {
     private let splitUnitMeters: Double
     private var enteredClosing = false
     private var announcedMarkers: Set<Int> = []
+    /// Elapsed time of the first crossing. Anchors the photo-finish window.
+    private var firstFinishAt: Double?
 
     // Surge / fade detection over a short window of each opponent's pace.
     private var paceHistory: [UUID: [(t: Double, pace: Double)]] = [:]
@@ -253,6 +255,7 @@ final class RaceEngine {
             let overshoot = movement.distance - distanceMeters
             s.finishTime = elapsed - (movement.speed > 0 ? overshoot / movement.speed : 0)
             finishedOrder.append(userID)
+            if firstFinishAt == nil { firstFinishAt = s.finishTime ?? elapsed }
         }
         states[userID] = s
     }
@@ -267,6 +270,7 @@ final class RaceEngine {
             s.finished = true
             s.finishTime = ghost.finishTime ?? elapsed
             finishedOrder.append(id)
+            if firstFinishAt == nil { firstFinishAt = s.finishTime ?? elapsed }
             if let place = finishedOrder.firstIndex(of: id).map({ $0 + 1 }),
                let racer = config.participants.first(where: { $0.id == id }) {
                 emit(.init(at: elapsed, kind: .finish(by: id, place: place),
@@ -433,13 +437,26 @@ final class RaceEngine {
 
     /// Sample the line at 60Hz through the closing seconds. The photo finish is
     /// only honest if it's drawn from this.
+    ///
+    /// The window is anchored to the **first** crossing, not to the end of the
+    /// race. Previously this kept a rolling nine seconds and trimmed to the end,
+    /// so in any race where the field finished more than nine seconds apart the
+    /// winner's crossing had already been discarded by the time the last runner
+    /// came in — and the film was reconstructed from samples where they stood
+    /// motionless on the line, printing one solid slab across the frame.
     private func sampleFinish() {
+        // Once the race is decided there is nothing left to photograph.
+        if let first = firstFinishAt, elapsed > first + 4 { return }
         guard elapsed - lastFinishSampleAt >= 1 / finishSampleHz else { return }
         lastFinishSampleAt = elapsed
         finishSamples.append(FinishSample(
             t: elapsed,
             distances: states.mapValues(\.distance)
         ))
+
+        // Stop trimming the moment anybody crosses: everything from here is the
+        // picture.
+        guard firstFinishAt == nil else { return }
         // Keep a rolling window until the race ends; then it's the record.
         //
         // Trimmed in batches, not one at a time. `removeFirst()` on an Array is

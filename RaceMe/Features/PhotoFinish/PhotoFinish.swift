@@ -22,6 +22,10 @@ struct PhotoFinishFilm {
         let isUser: Bool
         /// Elapsed seconds at which they crossed. Nil if they never did.
         let crossedAt: Double?
+        /// Speed in m/s as they crossed. Used to carry them *through* the slit —
+        /// the engine parks a finished racer exactly on the line, and without
+        /// this they'd keep printing forever.
+        let speedAtLine: Double
         /// Nil if their crossing falls outside the visible window — the view
         /// draws an edge marker instead of silently cropping them out.
         let inWindow: Bool
@@ -84,14 +88,17 @@ struct PhotoFinishFilm {
         // the same interpolation the engine used for the official time, so the
         // picture and the clock agree.
         var crossings: [UUID: Double] = [:]
+        var speeds: [UUID: Double] = [:]
         for racer in result.config.participants {
             var previous: (t: Double, d: Double)?
             for sample in samples {
                 guard let d = sample.distances[racer.id] else { continue }
                 if d >= distance, let p = previous, p.d < distance {
                     let span = d - p.d
+                    let dt = sample.t - p.t
                     let f = span > 0 ? (distance - p.d) / span : 0
-                    crossings[racer.id] = p.t + (sample.t - p.t) * f
+                    crossings[racer.id] = p.t + dt * f
+                    if dt > 0 { speeds[racer.id] = span / dt }
                     break
                 }
                 previous = (sample.t, d)
@@ -100,16 +107,27 @@ struct PhotoFinishFilm {
             if crossings[racer.id] == nil, let t = result.times[racer.id] {
                 crossings[racer.id] = t
             }
+            // Fall back to average pace for the leg if the straddle was missed.
+            if speeds[racer.id] == nil, let t = result.times[racer.id], t > 0 {
+                speeds[racer.id] = distance / t
+            }
         }
 
         let times = crossings.values.sorted()
         let first = times.first ?? 0
-        let last = times.last ?? first
 
         // Pad either side so nobody is flush against the edge of the film.
         let pad = 0.55
         let t0 = max(first - pad, samples.first?.t ?? first - pad)
-        let t1 = min(max(last + pad, t0 + 1.4), t0 + maxWindow)
+
+        // The window closes on the last runner who's actually *in* it. Sizing it
+        // to a straggler forty seconds back would leave the winner as a hairline
+        // at the far left and the rest of the frame empty — so anyone beyond the
+        // window gets an edge tag instead, and the film tightens around the
+        // people who were genuinely at the line together.
+        let contested = times.filter { $0 - first <= maxWindow }
+        let last = contested.last ?? first
+        let t1 = min(max(last + pad, t0 + 1.6), t0 + maxWindow)
 
         let lanes: [Lane] = result.order.compactMap { id in
             guard let racer = result.config.participants.first(where: { $0.id == id }) else { return nil }
@@ -120,6 +138,7 @@ struct PhotoFinishFilm {
                 color: racer.color,
                 isUser: racer.isUser,
                 crossedAt: crossed,
+                speedAtLine: max(speeds[id] ?? 4, 1.5),
                 inWindow: crossed.map { $0 >= t0 && $0 <= t1 } ?? false
             )
         }
@@ -137,7 +156,22 @@ struct PhotoFinishFilm {
     /// whole distribution in a few hundredths of a second and prints narrow; a
     /// runner limping in prints wide. That difference is the whole picture.
     func intensity(_ id: UUID, at t: Double) -> Double {
-        guard let d = distance(of: id, at: t) else { return 0 }
+        guard let lane = lanes.first(where: { $0.id == id }) else { return 0 }
+
+        // Past the line, position is extrapolated from the speed they crossed
+        // at rather than read from the samples. The engine parks a finisher
+        // exactly on the line and leaves them there, so sampled distance stays
+        // pinned at the finish distance — which reads as "still in the slit"
+        // and printed one solid slab across the whole frame.
+        let d: Double
+        if let crossed = lane.crossedAt, t > crossed {
+            d = finishDistance + lane.speedAtLine * (t - crossed)
+        } else if let sampled = distance(of: id, at: t) {
+            d = sampled
+        } else {
+            return 0
+        }
+
         let e = d - finishDistance
         let sigma = Self.bodyDepth / 2
         let z = e / sigma
