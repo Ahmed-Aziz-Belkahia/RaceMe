@@ -332,19 +332,23 @@ struct Trait: Identifiable, Hashable, Sendable {
     /// 0…1
     let value: Double
 
+    /// Scaled so a card lands somewhere in the middle of the range rather than
+    /// pinning two of three bars to the clamp. A Kicker showing 98 Kick and 92
+    /// Nerve reads as a maxed-out character sheet, not a measurement — and the
+    /// whole promise of the card is that it moves when you race.
     static func derive(from p: RunnerProfile) -> [Trait] {
         let shape = p.archetype.paceShape
         // Kick: how much faster the close is than the middle.
-        let kick = clamp((shape.middle - shape.close) * 8 + 0.4)
+        let kick = clamp((shape.middle - shape.close) * 5.5 + 0.34)
         // Consistency: metronomes and consistency-seekers score high.
         let consistency = clamp(
-            0.42
-            + (p.archetype == .metronome ? 0.34 : 0)
-            + (p.goals.contains(.consistency) ? 0.2 : 0)
-            + Double(p.frequency.perWeek) * 0.03
+            0.36
+            + (p.archetype == .metronome ? 0.3 : 0)
+            + (p.goals.contains(.consistency) ? 0.16 : 0)
+            + Double(p.frequency.perWeek) * 0.025
         )
         // Nerve: appetite for going with a move.
-        let nerve = clamp(0.3 + p.selfImage.difficulty * 0.55 + (p.rivalName != nil ? 0.12 : 0))
+        let nerve = clamp(0.26 + p.selfImage.difficulty * 0.45 + (p.rivalName != nil ? 0.09 : 0))
         return [
             Trait(name: "Kick", value: kick),
             Trait(name: "Consistency", value: consistency),

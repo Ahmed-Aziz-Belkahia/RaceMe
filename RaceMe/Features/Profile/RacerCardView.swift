@@ -233,10 +233,14 @@ private struct TraitLane: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            // Wide enough for "Consistency", which was wrapping mid-word and
+            // breaking the row into two lines on the one screen users screenshot.
             Text(trait.name)
                 .font(Prose.caption(15))
                 .foregroundStyle(Track.chalkDim)
-                .frame(width: 86, alignment: .leading)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(width: 104, alignment: .leading)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
